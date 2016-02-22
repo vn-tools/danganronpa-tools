@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using static LIN.ScriptWrite;
 
 namespace LIN
 {
@@ -56,11 +55,11 @@ namespace LIN
             Script s = new Script(input, decompile, danganronpa2);
             if (decompile)
             {
-                WriteSource(s, output);
+                ScriptWrite.WriteSource(s, output);
             }
             else
             {
-                WriteCompiled(s, output);
+                ScriptWrite.WriteCompiled(s, output);
             }
         }
     }

@@ -2,18 +2,17 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-using static LIN.Script;
 
 namespace LIN
 {
-    class ScriptWrite
+    static class ScriptWrite
     {
         static public void WriteSource(Script s, string Filename)
         {
             Console.WriteLine("[write] writing decompiled file...");
             System.IO.StreamWriter File = new System.IO.StreamWriter(Filename, false, Encoding.Unicode);
 
-            foreach (Entry e in s.ScriptData)
+            foreach (Script.Entry e in s.ScriptData)
             {
                 File.Write(Opcode.GetOpName(e.Opcode));
                 if (e.Opcode == 0x02)
@@ -48,13 +47,13 @@ namespace LIN
 
             // Header
             File.AddRange(BitConverter.GetBytes((Int32)s.Type));
-            File.AddRange(BitConverter.GetBytes(s.Type == ScriptType.Text ? 16 : 12));
+            File.AddRange(BitConverter.GetBytes(s.Type == Script.ScriptType.Text ? 16 : 12));
             switch (s.Type)
             {
-                case ScriptType.Textless:
+                case Script.ScriptType.Textless:
                     File.AddRange(BitConverter.GetBytes(s.FileSize));
                     break;
-                case ScriptType.Text:
+                case Script.ScriptType.Text:
                     File.AddRange(BitConverter.GetBytes(s.TextBlockPos));
                     File.AddRange(BitConverter.GetBytes(s.FileSize));
                     break;
@@ -62,10 +61,10 @@ namespace LIN
             }
 
             Dictionary<int, string> TextData = new Dictionary<int, string>();
-            if (s.Type == ScriptType.Text)
+            if (s.Type == Script.ScriptType.Text)
             {
                 s.TextEntries = 0;
-                foreach (Entry e in s.ScriptData)
+                foreach (Script.Entry e in s.ScriptData)
                 {
                     if (e.Opcode == 0x02)
                     {
@@ -82,7 +81,7 @@ namespace LIN
                 s.TextEntries = Math.Max(s.TextEntries, TextData.Keys.Max() + 1);
             }
 
-            foreach (Entry e in s.ScriptData)
+            foreach (Script.Entry e in s.ScriptData)
             {
                 File.Add(0x70);
                 File.Add(e.Opcode);
@@ -94,11 +93,11 @@ namespace LIN
             s.TextBlockPos = File.Count;
             for (int i = 0; i < 4; i++) File[0x08 + i] = BitConverter.GetBytes(s.TextBlockPos)[i];
 
-            if (s.Type == ScriptType.Textless)
+            if (s.Type == Script.ScriptType.Textless)
             {
                 s.FileSize = s.TextBlockPos;
             }
-            else if (s.Type == ScriptType.Text)
+            else if (s.Type == Script.ScriptType.Text)
             {
                 File.AddRange(BitConverter.GetBytes(s.TextEntries));
                 int[] StartPoints = new int[s.TextEntries];

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using static LIN.ScriptRead;
 
 namespace LIN
 {
@@ -31,14 +30,14 @@ namespace LIN
         {
             if (Compiled)
             {
-                if (!ReadCompiled(this, System.IO.File.ReadAllBytes(Filename), Danganronpa2))
+                if (!ScriptRead.ReadCompiled(this, System.IO.File.ReadAllBytes(Filename), Danganronpa2))
                 {
                     throw new Exception("[load] error: failed to load script.");
                 }
             }
             else
             {
-                if (!ReadSource(this, Filename))
+                if (!ScriptRead.ReadSource(this, Filename))
                 {
                     throw new Exception("[load] error: failed to load script.");
                 }
@@ -47,7 +46,7 @@ namespace LIN
 
         public Script(byte[] Bytes, bool Danganronpa2 = false)
         {
-            if (!ReadCompiled(this, Bytes, Danganronpa2))
+            if (!ScriptRead.ReadCompiled(this, Bytes, Danganronpa2))
             {
                 throw new Exception("[load] error: failed to load script.");
             }

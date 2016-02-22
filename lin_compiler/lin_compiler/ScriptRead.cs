@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using static LIN.Script;
 
 namespace LIN
 {
-    class ScriptRead
+    static class ScriptRead
     {
         static public bool ReadSource(Script s, string Filename)
         {
             // Default script type is textless
-            s.Type = ScriptType.Textless;
+            s.Type = Script.ScriptType.Textless;
             Console.WriteLine("[read] reading source file...");
             System.IO.StreamReader File = new System.IO.StreamReader(Filename, Encoding.Unicode);
-            List<Entry> Script = new List<Entry>();
+            List<Script.Entry> ScriptData = new List<Script.Entry>();
             StringBuilder sb = new StringBuilder();
             while (File.Peek() != -1)
             {
                 char c = (char)File.Read();
-                Entry e = new Entry();
+                Script.Entry e = new Script.Entry();
 
                 // Get opcode
                 sb.Clear();
@@ -43,7 +42,7 @@ namespace LIN
                 if (e.Opcode == 0x02)
                 {
                     // Text found
-                    s.Type = ScriptType.Text;
+                    s.Type = Script.ScriptType.Text;
                     s.TextEntries++;
                     e.Text = sb.ToString();
                     e.Args = new byte[2];
@@ -61,9 +60,9 @@ namespace LIN
                     e.Args = Args.ToArray();
                 }
 
-                Script.Add(e);
+                ScriptData.Add(e);
             }
-            s.ScriptData = Script;
+            s.ScriptData = ScriptData;
 
             return true;
         }
@@ -73,16 +72,16 @@ namespace LIN
             Console.WriteLine("[read] reading compiled file...");
             s.File = Bytes;
             Console.WriteLine("[read] reading header...");
-            s.Type = (ScriptType)BitConverter.ToInt32(s.File, 0x0);
+            s.Type = (Script.ScriptType)BitConverter.ToInt32(s.File, 0x0);
             s.HeaderSize = BitConverter.ToInt32(s.File, 0x4);
             switch (s.Type)
             {
-                case ScriptType.Textless:
+                case Script.ScriptType.Textless:
                     s.FileSize = BitConverter.ToInt32(s.File, 0x8);
                     s.TextBlockPos = s.FileSize;
                     s.ScriptData = ReadScriptData(s, Danganronpa2);
                     break;
-                case ScriptType.Text:
+                case Script.ScriptType.Text:
                     s.TextBlockPos = BitConverter.ToInt32(s.File, 0x8);
                     s.FileSize = BitConverter.ToInt32(s.File, 0xC);
                     if (s.FileSize == 0)
@@ -98,16 +97,16 @@ namespace LIN
             return true;
         }
 
-        static private List<Entry> ReadScriptData(Script s, bool DR2 = false)
+        static private List<Script.Entry> ReadScriptData(Script s, bool DR2 = false)
         {
             Console.WriteLine("[read] reading script data...");
-            List<Entry> Script = new List<Entry>();
+            List<Script.Entry> ScriptData = new List<Script.Entry>();
             for (int i = s.HeaderSize; i < s.TextBlockPos; i++)
             {
                 if (s.File[i] == 0x70)
                 {
                     i++;
-                    Entry e = new Entry();
+                    Script.Entry e = new Script.Entry();
                     e.Opcode = s.File[i];
 
                     switch (e.Opcode)
@@ -171,7 +170,7 @@ namespace LIN
                                 i++;
                             }
                             e.Args = Args.ToArray();
-                            Script.Add(e);
+                            ScriptData.Add(e);
                             continue;
                     }
 
@@ -180,7 +179,7 @@ namespace LIN
                         e.Args[a] = s.File[i + 1];
                         i++;
                     }
-                    Script.Add(e);
+                    ScriptData.Add(e);
                 }
                 else
                 {
@@ -193,10 +192,10 @@ namespace LIN
                         }
                         i++;
                     }
-                    return Script;
+                    return ScriptData;
                 }
             }
-            return Script;
+            return ScriptData;
         }
 
         static private void ReadTextEntries(Script s)
