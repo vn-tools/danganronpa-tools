@@ -5,6 +5,12 @@ namespace LIN
 {
     class Program
     {
+        static string TrimExtension(string path)
+        {
+            int len = path.LastIndexOf('.');
+            return len == -1 ? path : path.Substring(0, len);
+        }
+
         static void DisplayUsage()
         {
             Console.WriteLine("\nlin_compiler: danganronpa script (de)compiler");
@@ -48,7 +54,7 @@ namespace LIN
             else
             {
                 input = plainArgs[0];
-                output = plainArgs.Count == 2 ? plainArgs[1] : input + (decompile ? ".txt" : ".lin");
+                output = plainArgs.Count == 2 ? plainArgs[1] : TrimExtension(input) + (decompile ? ".txt" : ".lin");
             }
 
             // Generate opcode name lookup
