@@ -47,13 +47,13 @@ namespace LIN
 
             // Header
             File.AddRange(BitConverter.GetBytes((Int32)s.Type));
-            File.AddRange(BitConverter.GetBytes(s.Type == Script.ScriptType.Text ? 16 : 12));
+            File.AddRange(BitConverter.GetBytes(s.Type == ScriptType.Text ? 16 : 12));
             switch (s.Type)
             {
-                case Script.ScriptType.Textless:
+                case ScriptType.Textless:
                     File.AddRange(BitConverter.GetBytes(s.FileSize));
                     break;
-                case Script.ScriptType.Text:
+                case ScriptType.Text:
                     File.AddRange(BitConverter.GetBytes(s.TextBlockPos));
                     File.AddRange(BitConverter.GetBytes(s.FileSize));
                     break;
@@ -61,7 +61,7 @@ namespace LIN
             }
 
             Dictionary<int, string> TextData = new Dictionary<int, string>();
-            if (s.Type == Script.ScriptType.Text)
+            if (s.Type == ScriptType.Text)
             {
                 s.TextEntries = 0;
                 foreach (Script.Entry e in s.ScriptData)
@@ -93,11 +93,11 @@ namespace LIN
             s.TextBlockPos = File.Count;
             for (int i = 0; i < 4; i++) File[0x08 + i] = BitConverter.GetBytes(s.TextBlockPos)[i];
 
-            if (s.Type == Script.ScriptType.Textless)
+            if (s.Type == ScriptType.Textless)
             {
                 s.FileSize = s.TextBlockPos;
             }
-            else if (s.Type == Script.ScriptType.Text)
+            else if (s.Type == ScriptType.Text)
             {
                 File.AddRange(BitConverter.GetBytes(s.TextEntries));
                 int[] StartPoints = new int[s.TextEntries];

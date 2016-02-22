@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace LIN
 {
+    enum ScriptType
+    {
+        Textless = 1,
+        Text = 2,
+    }
+
     class Script
     {
         public class Entry
@@ -10,12 +16,6 @@ namespace LIN
             public byte Opcode;
             public byte[] Args;
             public string Text;
-        }
-
-        public enum ScriptType
-        {
-            Textless = 1,
-            Text = 2,
         }
 
         public byte[] File;

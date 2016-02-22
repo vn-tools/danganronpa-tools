@@ -9,7 +9,7 @@ namespace LIN
         static public bool ReadSource(Script s, string Filename)
         {
             // Default script type is textless
-            s.Type = Script.ScriptType.Textless;
+            s.Type = ScriptType.Textless;
             Console.WriteLine("[read] reading source file...");
             System.IO.StreamReader File = new System.IO.StreamReader(Filename, Encoding.Unicode);
             List<Script.Entry> ScriptData = new List<Script.Entry>();
@@ -42,7 +42,7 @@ namespace LIN
                 if (e.Opcode == 0x02)
                 {
                     // Text found
-                    s.Type = Script.ScriptType.Text;
+                    s.Type = ScriptType.Text;
                     s.TextEntries++;
                     e.Text = sb.ToString();
                     e.Args = new byte[2];
@@ -72,16 +72,16 @@ namespace LIN
             Console.WriteLine("[read] reading compiled file...");
             s.File = Bytes;
             Console.WriteLine("[read] reading header...");
-            s.Type = (Script.ScriptType)BitConverter.ToInt32(s.File, 0x0);
+            s.Type = (ScriptType)BitConverter.ToInt32(s.File, 0x0);
             s.HeaderSize = BitConverter.ToInt32(s.File, 0x4);
             switch (s.Type)
             {
-                case Script.ScriptType.Textless:
+                case ScriptType.Textless:
                     s.FileSize = BitConverter.ToInt32(s.File, 0x8);
                     s.TextBlockPos = s.FileSize;
                     s.ScriptData = ReadScriptData(s, Danganronpa2);
                     break;
-                case Script.ScriptType.Text:
+                case ScriptType.Text:
                     s.TextBlockPos = BitConverter.ToInt32(s.File, 0x8);
                     s.FileSize = BitConverter.ToInt32(s.File, 0xC);
                     if (s.FileSize == 0)
