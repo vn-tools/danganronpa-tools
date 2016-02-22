@@ -12,7 +12,7 @@ namespace LIN
             Console.WriteLine("[write] writing decompiled file...");
             System.IO.StreamWriter File = new System.IO.StreamWriter(Filename, false, Encoding.Unicode);
 
-            foreach (Script.Entry e in s.ScriptData)
+            foreach (ScriptEntry e in s.ScriptData)
             {
                 File.Write(Opcode.GetOpName(e.Opcode));
                 if (e.Opcode == 0x02)
@@ -64,7 +64,7 @@ namespace LIN
             if (s.Type == ScriptType.Text)
             {
                 s.TextEntries = 0;
-                foreach (Script.Entry e in s.ScriptData)
+                foreach (ScriptEntry e in s.ScriptData)
                 {
                     if (e.Opcode == 0x02)
                     {
@@ -81,7 +81,7 @@ namespace LIN
                 s.TextEntries = Math.Max(s.TextEntries, TextData.Keys.Max() + 1);
             }
 
-            foreach (Script.Entry e in s.ScriptData)
+            foreach (ScriptEntry e in s.ScriptData)
             {
                 File.Add(0x70);
                 File.Add(e.Opcode);

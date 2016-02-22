@@ -9,21 +9,21 @@ namespace LIN
         Text = 2,
     }
 
+    class ScriptEntry
+    {
+        public byte Opcode;
+        public byte[] Args;
+        public string Text;
+    }
+
     class Script
     {
-        public class Entry
-        {
-            public byte Opcode;
-            public byte[] Args;
-            public string Text;
-        }
-
         public byte[] File;
         public ScriptType Type;
         public int HeaderSize;
         public int FileSize;
         public int TextBlockPos;
-        public List<Entry> ScriptData;
+        public List<ScriptEntry> ScriptData;
         public int TextEntries;
 
         public Script(string Filename, bool Compiled = true, bool Danganronpa2 = false)

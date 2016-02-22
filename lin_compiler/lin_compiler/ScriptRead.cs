@@ -12,12 +12,12 @@ namespace LIN
             s.Type = ScriptType.Textless;
             Console.WriteLine("[read] reading source file...");
             System.IO.StreamReader File = new System.IO.StreamReader(Filename, Encoding.Unicode);
-            List<Script.Entry> ScriptData = new List<Script.Entry>();
+            List<ScriptEntry> ScriptData = new List<ScriptEntry>();
             StringBuilder sb = new StringBuilder();
             while (File.Peek() != -1)
             {
                 char c = (char)File.Read();
-                Script.Entry e = new Script.Entry();
+                ScriptEntry e = new ScriptEntry();
 
                 // Get opcode
                 sb.Clear();
@@ -97,16 +97,16 @@ namespace LIN
             return true;
         }
 
-        static private List<Script.Entry> ReadScriptData(Script s, bool DR2 = false)
+        static private List<ScriptEntry> ReadScriptData(Script s, bool DR2 = false)
         {
             Console.WriteLine("[read] reading script data...");
-            List<Script.Entry> ScriptData = new List<Script.Entry>();
+            List<ScriptEntry> ScriptData = new List<ScriptEntry>();
             for (int i = s.HeaderSize; i < s.TextBlockPos; i++)
             {
                 if (s.File[i] == 0x70)
                 {
                     i++;
-                    Script.Entry e = new Script.Entry();
+                    ScriptEntry e = new ScriptEntry();
                     e.Opcode = s.File[i];
 
                     switch (e.Opcode)
