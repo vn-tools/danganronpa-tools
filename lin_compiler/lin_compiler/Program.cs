@@ -50,9 +50,9 @@ namespace LINCompiler
             {
                 if (a.StartsWith("-"))
                 {
-                    if (a == "-h" || a == "--help")        { DisplayUsage(); }
-                    if (a == "-d" || a == "--decompile")   { decompile = true; }
-                    if (a == "-dr2" || a == "--dr2")       { danganronpa2 = true; }
+                    if (a == "-h" || a == "--help")           { DisplayUsage(); }
+                    if (a == "-d" || a == "--decompile")      { decompile = true; }
+                    if (a == "-dr2" || a == "--danganronpa2") { danganronpa2 = true; }
                 }
                 else
                 {
