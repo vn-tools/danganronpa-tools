@@ -1,0 +1,160 @@
+#!/bin/python3
+import argparse
+import os
+import struct
+
+def read_u8(io): return struct.unpack('B', io.read(1))[0]
+def read_u32_le(io): return struct.unpack('<I', io.read(4))[0]
+def read_u64_le(io): return struct.unpack('<Q', io.read(8))[0]
+def read_string(io): return io.read(read_u32_le(io)).decode('utf8')
+def write_u8(io, num): io.write(struct.pack('B', num))
+def write_u32_le(io, num): io.write(struct.pack('<I', num))
+def write_u64_le(io, num): io.write(struct.pack('<Q', num))
+def write_string(io, str): write_u32_le(io, len(str.encode('utf8'))); io.write(str.encode('utf8'))
+def flat_walk(dir): return [os.path.join(dp, f) for dp, dn, fn in os.walk(dir) for f in fn]
+
+class WadFileEntry(object):
+    def __init__(self, path, size, offset):
+        self.path = path
+        self.size = size
+        self.offset = offset
+
+class WadDirEntry(object):
+    def __init__(self, path, type):
+        self.path = path
+        self.type = type
+
+class WadDir(object):
+    def __init__(self, path, entries):
+        self.path = path
+        self.entries = []
+
+class Wad(object):
+    def __init__(self, version, extra_header, files, dirs):
+        self.version = version
+        self.extra_header = extra_header
+        self.files = files
+        self.dirs = dirs
+
+def read_wad(fh):
+    if fh.read(4) != b'AGAR':
+        raise RuntimeError('Not a WAD archive')
+    version = (read_u32_le(fh), read_u32_le(fh))
+    extra_header_size = read_u32_le(fh)
+    extra_header = fh.read(extra_header_size)
+
+    files = []
+    file_count = read_u32_le(fh)
+    for i in range(file_count):
+        file_path = read_string(fh)
+        file_size = read_u64_le(fh)
+        file_offset = read_u64_le(fh)
+        files.append(WadFileEntry(file_path, file_size, file_offset))
+
+    dirs = []
+    dir_count = read_u32_le(fh)
+    for i in range(dir_count):
+        dir_path = read_string(fh)
+        dir_entries = []
+        dir_entry_count = read_u32_le(fh)
+        for j in range(dir_entry_count):
+            dir_entry_path = read_string(fh)
+            dir_entry_type = read_u8(fh)
+            dir_entries.append(WadDirEntry(dir_entry_path, dir_entry_type))
+        dirs.append(WadDir(dir_path, dir_entries))
+    return Wad(version, extra_header, files, dirs), fh.tell()
+
+def write_wad(wad, fh):
+    fh.write(b'AGAR')
+    write_u32_le(fh, wad.version[0])
+    write_u32_le(fh, wad.version[1])
+    write_u32_le(fh, len(wad.extra_header))
+    fh.write(wad.extra_header)
+
+    write_u32_le(fh, len(wad.files))
+    for file_entry in wad.files:
+        write_string(fh, file_entry.path)
+        write_u64_le(fh, file_entry.size)
+        write_u64_le(fh, file_entry.offset)
+
+    write_u32_le(fh, len(wad.dirs))
+    for dir in wad.dirs:
+        write_string(fh, dir.path)
+        write_u32_le(fh, len(dir.entries))
+        for dir_entry in dir.entries:
+            write_string(fh, dir_entry.path)
+            write_u8(fh, dir_entry.type)
+
+class Commands(object):
+    @staticmethod
+    def list_files(args):
+        with open(args.input, 'rb') as fh:
+            wad, base_offset = read_wad(fh)
+            for file_entry in wad.files:
+                print(file_entry.path)
+
+    @staticmethod
+    def extract_files(args):
+        with open(args.input, 'rb') as input_fh:
+            wad, base_offset = read_wad(input_fh)
+            for file_entry in wad.files:
+                input_fh.seek(base_offset + file_entry.offset)
+                content = input_fh.read(file_entry.size)
+                output_path = os.path.join(args.output, file_entry.path)
+                print(output_path)
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                with open(output_path, 'wb') as output_fh:
+                    output_fh.write(content)
+
+    @staticmethod
+    def pack_files(args):
+        version = (1, 1)
+        extra_header = b''
+        files = []
+        dirs = []
+        cur_offset = 0
+        input_files = list(sorted(flat_walk(args.input)))
+        for physical_path in input_files:
+            entry_name = os.path.relpath(physical_path, args.input)
+            entry_size = os.path.getsize(physical_path)
+            entry_offset = cur_offset
+            cur_offset += entry_size
+            files.append(WadFileEntry(entry_name, entry_size, entry_offset))
+        wad = Wad(version, extra_header, files, dirs)
+        with open(args.output, 'wb') as fh:
+            write_wad(wad, fh)
+            for physical_path in input_files:
+                with open(physical_path, 'rb') as file_fh:
+                    content = file_fh.read()
+                    fh.write(content)
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Abstraction\'s WAD archive maniplator')
+
+    subparsers = parser.add_subparsers(help='choose the subcommand')
+    subparsers.required = True
+    subparsers.dest = 'command'
+
+    subparser = subparsers.add_parser('list', help='list files in an archive')
+    subparser.add_argument('input', help='path to the input.wad file')
+    subparser.set_defaults(func=Commands.list_files)
+
+    subparser = subparsers.add_parser('extract', help='extract files from an archive')
+    subparser.add_argument('input', help='path to the input wad file')
+    subparser.add_argument('output', help='path to the output directory')
+    subparser.set_defaults(func=Commands.extract_files)
+
+    subparser = subparsers.add_parser('create', help='creates a new archive')
+    subparser.add_argument('input', help='path to the input directory')
+    subparser.add_argument('output', help='path to the output wad file')
+    subparser.set_defaults(func=Commands.pack_files)
+
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    args.func(args)
+
+if __name__ == '__main__':
+    main()
