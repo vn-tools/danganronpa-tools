@@ -19,8 +19,8 @@ namespace LIN
 
         static void Main(string[] args)
         {
+            Game game = Game.Base;
             bool decompile = false;
-            bool danganronpa2 = false;
             string input, output;
 
             // Parse arguments
@@ -33,7 +33,7 @@ namespace LIN
                 {
                     if (a == "-h" || a == "--help")           { DisplayUsage(); }
                     if (a == "-d" || a == "--decompile")      { decompile = true; }
-                    if (a == "-dr2" || a == "--danganronpa2") { danganronpa2 = true; }
+                    if (a == "-dr2" || a == "--danganronpa2") { game = Game.Danganronpa2; }
                 }
                 else
                 {
@@ -51,15 +51,18 @@ namespace LIN
                 output = plainArgs.Count == 2 ? plainArgs[1] : input + (decompile ? ".txt" : ".lin");
             }
 
+            // Generate opcode name lookup
+            Opcode.GenerateOpcodeLookup();
+
             // Execute desired functionality
-            Script s = new Script(input, decompile, danganronpa2);
+            Script s = new Script(input, decompile, game);
             if (decompile)
             {
-                ScriptWrite.WriteSource(s, output);
+                ScriptWrite.WriteSource(s, output, game);
             }
             else
             {
-                ScriptWrite.WriteCompiled(s, output);
+                ScriptWrite.WriteCompiled(s, output, game);
             }
         }
     }

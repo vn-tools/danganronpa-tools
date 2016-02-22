@@ -26,27 +26,27 @@ namespace LIN
         public List<ScriptEntry> ScriptData;
         public int TextEntries;
 
-        public Script(string Filename, bool Compiled = true, bool Danganronpa2 = false)
+        public Script(string Filename, bool Compiled = true, Game game = Game.Base)
         {
             if (Compiled)
             {
-                if (!ScriptRead.ReadCompiled(this, System.IO.File.ReadAllBytes(Filename), Danganronpa2))
+                if (!ScriptRead.ReadCompiled(this, System.IO.File.ReadAllBytes(Filename), game))
                 {
                     throw new Exception("[load] error: failed to load script.");
                 }
             }
             else
             {
-                if (!ScriptRead.ReadSource(this, Filename))
+                if (!ScriptRead.ReadSource(this, Filename, game))
                 {
                     throw new Exception("[load] error: failed to load script.");
                 }
             }
         }
 
-        public Script(byte[] Bytes, bool Danganronpa2 = false)
+        public Script(byte[] Bytes, Game game = Game.Base)
         {
-            if (!ScriptRead.ReadCompiled(this, Bytes, Danganronpa2))
+            if (!ScriptRead.ReadCompiled(this, Bytes, game))
             {
                 throw new Exception("[load] error: failed to load script.");
             }

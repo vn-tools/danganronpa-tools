@@ -7,14 +7,14 @@ namespace LIN
 {
     static class ScriptWrite
     {
-        static public void WriteSource(Script s, string Filename)
+        static public void WriteSource(Script s, string Filename, Game game = Game.Base)
         {
             Console.WriteLine("[write] writing decompiled file...");
             System.IO.StreamWriter File = new System.IO.StreamWriter(Filename, false, Encoding.Unicode);
 
             foreach (ScriptEntry e in s.ScriptData)
             {
-                File.Write(Opcode.GetOpName(e.Opcode));
+                File.Write(Opcode.GetOpName(e.Opcode, game));
                 if (e.Opcode == 0x02)
                 {
                     string Text = e.Text;
@@ -40,7 +40,7 @@ namespace LIN
             Console.WriteLine("[write] done.");
         }
 
-        static public void WriteCompiled(Script s, string Filename)
+        static public void WriteCompiled(Script s, string Filename, Game game = Game.Base)
         {
             Console.WriteLine("[write] writing compiled file...");
             List<byte> File = new List<byte>();

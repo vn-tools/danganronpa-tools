@@ -6,7 +6,7 @@ namespace LIN
 {
     static class ScriptRead
     {
-        static public bool ReadSource(Script s, string Filename)
+        static public bool ReadSource(Script s, string Filename, Game game = Game.Base)
         {
             // Default script type is textless
             s.Type = ScriptType.Textless;
@@ -28,7 +28,7 @@ namespace LIN
                     c = (char)File.Read();
                 }
                 if (File.Peek() != -1) c = (char)File.Read();
-                e.Opcode = Opcode.GetOpcode(sb.ToString().Trim());
+                e.Opcode = Opcode.GetOpcodeByName(sb.ToString().Trim(), game);
 
                 // Get args
                 sb.Clear();
@@ -67,7 +67,7 @@ namespace LIN
             return true;
         }
 
-        static public bool ReadCompiled(Script s, byte[] Bytes, bool Danganronpa2 = false)
+        static public bool ReadCompiled(Script s, byte[] Bytes, Game game = Game.Base)
         {
             Console.WriteLine("[read] reading compiled file...");
             s.File = Bytes;
@@ -79,14 +79,14 @@ namespace LIN
                 case ScriptType.Textless:
                     s.FileSize = BitConverter.ToInt32(s.File, 0x8);
                     s.TextBlockPos = s.FileSize;
-                    s.ScriptData = ReadScriptData(s, Danganronpa2);
+                    s.ScriptData = ReadScriptData(s, game);
                     break;
                 case ScriptType.Text:
                     s.TextBlockPos = BitConverter.ToInt32(s.File, 0x8);
                     s.FileSize = BitConverter.ToInt32(s.File, 0xC);
                     if (s.FileSize == 0)
                         s.FileSize = s.File.Length;
-                    s.ScriptData = ReadScriptData(s, Danganronpa2);
+                    s.ScriptData = ReadScriptData(s, game);
                     s.TextEntries = BitConverter.ToInt32(s.File, s.TextBlockPos);
                     ReadTextEntries(s);
                     break;
@@ -97,7 +97,7 @@ namespace LIN
             return true;
         }
 
-        static private List<ScriptEntry> ReadScriptData(Script s, bool DR2 = false)
+        static private List<ScriptEntry> ReadScriptData(Script s, Game game = Game.Base)
         {
             Console.WriteLine("[read] reading script data...");
             List<ScriptEntry> ScriptData = new List<ScriptEntry>();
@@ -109,77 +109,30 @@ namespace LIN
                     ScriptEntry e = new ScriptEntry();
                     e.Opcode = s.File[i];
 
-                    switch (e.Opcode)
+                    int ArgCount = Opcode.GetOpcodeArgCount(e.Opcode, game);
+                    if (ArgCount == -1)
                     {
-                        case 0x00: e.Args = new byte[2]; break;
-                        case 0x01: e.Args = new byte[DR2 ? 4 : 3]; break;
-                        case 0x02: e.Args = new byte[2]; break;
-                        case 0x03: e.Args = new byte[1]; break;
-                        case 0x04: e.Args = new byte[4]; break;
-                        case 0x05: e.Args = new byte[2]; break;
-                        case 0x06: e.Args = new byte[8]; break;
-                        case 0x08: e.Args = new byte[5]; break;
-                        case 0x09: e.Args = new byte[3]; break;
-                        case 0x0A: e.Args = new byte[3]; break;
-                        case 0x0B: e.Args = new byte[2]; break;
-                        case 0x0C: e.Args = new byte[2]; break;
-                        case 0x0D: e.Args = new byte[3]; break;
-                        case 0x0E: e.Args = new byte[2]; break;
-                        case 0x0F: e.Args = new byte[3]; break;
-                        case 0x10: e.Args = new byte[3]; break;
-                        case 0x11: e.Args = new byte[4]; break;
-                        case 0x14: e.Args = new byte[DR2 ? 6 : 3]; break;
-                        case 0x15: e.Args = new byte[DR2 ? 4 : 3]; break;
-                        case 0x19: e.Args = new byte[DR2 ? 5 : 3]; break;
-                        case 0x1A: e.Args = new byte[0]; break;
-                        case 0x1B: e.Args = new byte[DR2 ? 5 : 3]; break;
-                        case 0x1C: e.Args = new byte[0]; break;
-                        case 0x1E: e.Args = new byte[5]; break;
-                        case 0x1F: e.Args = new byte[7]; break;
-                        case 0x20: e.Args = new byte[5]; break;
-                        case 0x21: e.Args = new byte[1]; break;
-                        case 0x22: e.Args = new byte[3]; break;
-                        case 0x23: e.Args = new byte[5]; break;
-                        case 0x25: e.Args = new byte[2]; break;
-                        case 0x26: e.Args = new byte[3]; break;
-                        case 0x27: e.Args = new byte[1]; break;
-                        case 0x29: e.Args = new byte[DR2 ? 0xD : 1]; break;
-                        case 0x2A: e.Args = new byte[DR2 ? 0xC : 2]; break;
-                        case 0x2B: e.Args = new byte[1]; break;
-                        case 0x2C: e.Args = new byte[2]; break;
-                        case 0x2E: e.Args = new byte[DR2 ? 5 : 2]; break;
-                        case 0x2F: e.Args = new byte[10]; break;
-                        case 0x30: e.Args = new byte[DR2 ? 2 : 3]; break;
-                        case 0x32: e.Args = new byte[1]; break;
-                        case 0x33: e.Args = new byte[4]; break;
-                        case 0x34: e.Args = new byte[DR2 ? 1 : 2]; break;
-                        case 0x38: e.Args = new byte[5]; break;
-                        case 0x39: e.Args = new byte[5]; break;
-                        case 0x3A: e.Args = new byte[DR2 ? 4 : 0]; break;
-                        case 0x3B: e.Args = new byte[DR2 ? 2 : 0]; break;
-                        case 0x3C: e.Args = new byte[0]; break;
-                        case 0x4C: e.Args = new byte[0]; break;
-                        case 0x4D: e.Args = new byte[0]; break;
-                        default:
-                            List<byte> Args = new List<byte>();
-                            while (s.File[i + 1] != 0x70)
-                            {
-                                Args.Add(s.File[i + 1]);
-                                if (e.Opcode == 0x1A)
-                                    Console.WriteLine(s.File[i + 1]);
-                                i++;
-                            }
-                            e.Args = Args.ToArray();
-                            ScriptData.Add(e);
-                            continue;
+                        // Vararg
+                        List<byte> Args = new List<byte>();
+                        while (s.File[i + 1] != 0x70)
+                        {
+                            Args.Add(s.File[i + 1]);
+                            i++;
+                        }
+                        e.Args = Args.ToArray();
+                        ScriptData.Add(e);
+                        continue;
                     }
-
-                    for (int a = 0; a < e.Args.Length; a++)
+                    else
                     {
-                        e.Args[a] = s.File[i + 1];
-                        i++;
+                        e.Args = new byte[ArgCount];
+                        for (int a = 0; a < e.Args.Length; a++)
+                        {
+                            e.Args[a] = s.File[i + 1];
+                            i++;
+                        }
+                        ScriptData.Add(e);
                     }
-                    ScriptData.Add(e);
                 }
                 else
                 {
