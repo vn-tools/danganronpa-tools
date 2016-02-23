@@ -102,7 +102,7 @@ class Commands(object):
                 content = input_fh.read(file_entry.size)
                 output_path = os.path.join(args.output, file_entry.path)
                 if not args.silent:
-                    print(output_path)
+                    print('Saved', output_path)
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
                 with open(output_path, 'wb') as output_fh:
                     output_fh.write(content)
@@ -138,7 +138,7 @@ class Commands(object):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Abstraction\'s WAD archive maniplator')
+        description='Abstraction\'s WAD archive manipulator')
 
     parser.add_argument('-s', '--silent', action='store_true', help='disables all output')
 
@@ -147,17 +147,17 @@ def parse_args():
     subparsers.dest = 'command'
 
     subparser = subparsers.add_parser('list', help='list files in an archive')
-    subparser.add_argument('input', help='path to the input.wad file')
+    subparser.add_argument('input', help='path to the input WAD file')
     subparser.set_defaults(func=Commands.list_files)
 
     subparser = subparsers.add_parser('extract', help='extract files from an archive')
-    subparser.add_argument('input', help='path to the input wad file')
+    subparser.add_argument('input', help='path to the input WAD file')
     subparser.add_argument('output', help='path to the output directory')
     subparser.set_defaults(func=Commands.extract_files)
 
     subparser = subparsers.add_parser('create', help='creates a new archive')
     subparser.add_argument('input', help='path to the input directory', nargs='+')
-    subparser.add_argument('output', help='path to the output wad file')
+    subparser.add_argument('output', help='path to the output WAD file')
     subparser.set_defaults(func=Commands.pack_files)
 
     return parser.parse_args()
