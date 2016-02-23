@@ -15,18 +15,18 @@ def flat_walk(dir): return [os.path.join(dp, f) for dp, dn, fn in os.walk(dir) f
 
 class WadFileEntry(object):
     def __init__(self, path, size, offset):
-        self.path = path
+        self.path = path.replace("\\", "/")
         self.size = size
         self.offset = offset
 
 class WadDirEntry(object):
     def __init__(self, path, type):
-        self.path = path
+        self.path = path.replace("\\", "/")
         self.type = type
 
 class WadDir(object):
     def __init__(self, path, entries):
-        self.path = path
+        self.path = path.replace("\\", "/")
         self.entries = []
 
 class Wad(object):
