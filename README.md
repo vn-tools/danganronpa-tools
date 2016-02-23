@@ -7,14 +7,17 @@ Tools for translating Danganronpa (PC version).
 
 LIN script compiler / decompiler.
 
-To compile a script file, simply supply the input file (and optionally an output file).
-The compiler will spit out a .lin file, which you can add into the game.  
-Example syntax: lin_compiler input.txt output.lin
+To compile a script file, simply supply the input file (and optionally an
+output file). The compiler will spit out a .lin file, which you can add into
+the game.  
+Example: `lin_compiler input.txt output.lin`
 
-Decompiling works exactly the same, except you supply a -d (or --decompile) argument.  
-Example: lin_compiler -d input.lin output.txt
+Decompiling works exactly the same, except you supply a -d (or --decompile)
+argument.  
+Example: `lin_compiler -d input.lin output.txt`
 
-If you are working with Danganronpa 2 script files, you should additionally pass the -dr2 (or --danganronpa2) argument.
+If you are working with Danganronpa 2 script files, you should additionally
+pass the `-dr2` (or `--danganronpa2`) argument.
 
 ### `wad_archiver`
 
