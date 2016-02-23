@@ -15,18 +15,18 @@ def flat_walk(dir): return [os.path.join(dp, f) for dp, dn, fn in os.walk(dir) f
 
 class WadFileEntry(object):
     def __init__(self, path, size, offset):
-        self.path = path.replace("\\", "/")
+        self.path = path.replace('\\', '/')
         self.size = size
         self.offset = offset
 
 class WadDirEntry(object):
     def __init__(self, path, type):
-        self.path = path.replace("\\", "/")
+        self.path = path.replace('\\', '/')
         self.type = type
 
 class WadDir(object):
     def __init__(self, path, entries):
-        self.path = path.replace("\\", "/")
+        self.path = path.replace('\\', '/')
         self.entries = []
 
 class Wad(object):
@@ -113,9 +113,14 @@ class Commands(object):
         files = []
         dirs = []
         cur_offset = 0
-        input_files = list(sorted(flat_walk(args.input)))
-        for physical_path in input_files:
-            entry_name = os.path.relpath(physical_path, args.input)
+        input_files = []
+        for dir in args.input:
+            for physical_path in sorted(flat_walk(dir)):
+                relative_path = os.path.relpath(physical_path, dir)
+                if (physical_path, relative_path) not in input_files:
+                    input_files.append((physical_path, relative_path))
+        for physical_path, relative_path in input_files:
+            entry_name = relative_path
             entry_size = os.path.getsize(physical_path)
             entry_offset = cur_offset
             cur_offset += entry_size
@@ -123,8 +128,9 @@ class Commands(object):
         wad = Wad(version, extra_header, files, dirs)
         with open(args.output, 'wb') as fh:
             write_wad(wad, fh)
-            for physical_path in input_files:
+            for physical_path, relative_path in input_files:
                 with open(physical_path, 'rb') as file_fh:
+                    print('Adding', relative_path)
                     content = file_fh.read()
                     fh.write(content)
 
@@ -146,7 +152,7 @@ def parse_args():
     subparser.set_defaults(func=Commands.extract_files)
 
     subparser = subparsers.add_parser('create', help='creates a new archive')
-    subparser.add_argument('input', help='path to the input directory')
+    subparser.add_argument('input', help='path to the input directory', nargs='+')
     subparser.add_argument('output', help='path to the output wad file')
     subparser.set_defaults(func=Commands.pack_files)
 

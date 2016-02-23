@@ -36,5 +36,15 @@ is recommended to use following workflow for working with the patches:
 4. Pack the files back:  
    `./wad_archiver create extracted/ /path/to/game/dr1_data_keyboard.wad`
 
+5. Go to step 3
+
+You can also combine multiple directories into one archive like this:
+
+    ./wad_archiver create \
+        directory1/ \
+        directory2/ \
+        directory3/ \
+        output.wad
+
 Incremental patches were not implemented because patching
 `dr1_data_keyboard.wad` this way seems to be fast enough.
