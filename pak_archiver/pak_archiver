@@ -1,0 +1,159 @@
+#!/bin/python3
+import argparse
+import math
+import os
+import struct
+
+BOM = b'\xFF\xFE'
+
+def read_u32_le(io): return struct.unpack('<I', io.read(4))[0]
+def write_u32_le(io, num): io.write(struct.pack('<I', num))
+def flat_walk(dir): return [os.path.join(dp, f) for dp, dn, fn in os.walk(dir) for f in fn]
+
+class PakEntry(object):
+    def __init__(self, index, offset, size):
+        self.index = index
+        self.offset = offset
+        self.size = size
+
+class Pak(object):
+    def __init__(self, entries):
+        self.entries = entries
+
+def read_pak(fh):
+    file_count = read_u32_le(fh)
+    offsets = []
+    for i in range(file_count):
+        offsets.append(read_u32_le(fh))
+    base_offset = fh.tell()
+    fh.seek(0, os.SEEK_END)
+    offsets.append(fh.tell())
+    fh.seek(base_offset)
+    entries = []
+    for i in range(file_count):
+        entries.append(PakEntry(i, offsets[i], offsets[i+1] - offsets[i]))
+    return Pak(entries)
+
+def write_pak(pak, fh):
+    write_u32_le(fh, len(pak.entries))
+    for file_entry in pak.entries:
+        write_u32_le(fh, file_entry.offset)
+
+class Commands(object):
+    @staticmethod
+    def list_files(args):
+        for fn in args.input:
+            print(fn)
+            with open(fn, 'rb') as fh:
+                pak = read_pak(fh)
+                index_pad = math.ceil(math.log(len(pak.entries), 16))
+                size_pad = math.ceil(math.log(max(entry.size for entry in pak.entries), 16))
+                for entry in pak.entries:
+                    fh.seek(entry.offset)
+                    content_raw = fh.read(entry.size)
+                    if content_raw[0:2] == BOM:
+                        content_text = content_raw.decode('utf16')
+                    else:
+                        content_text = '/BINARY CONTENT/'
+                    print('%*X (%0*X) %s' % (index_pad, entry.index, size_pad, entry.size, content_text))
+
+    @staticmethod
+    def extract_files(args):
+        with open(args.input, 'rb') as input_fh:
+            pak = read_pak(input_fh)
+            for entry in pak.entries:
+                input_fh.seek(entry.offset)
+                content = input_fh.read(entry.size)
+                output_path = os.path.join(args.output, '%04x' % entry.index)
+                if not args.silent:
+                    print('Saved', output_path)
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                with open(output_path, 'wb') as output_fh:
+                    output_fh.write(content)
+
+    @staticmethod
+    def pack_files(args):
+        input_files = []
+        for dir in args.input:
+            for physical_path in sorted(flat_walk(dir)):
+                if physical_path not in input_files:
+                    input_files.append(physical_path)
+        cur_offset = 4 + len(input_files) * 4
+        entries = []
+        for physical_path in input_files:
+            entry_index = int(os.path.basename(physical_path), 16)
+            entry_size = os.path.getsize(physical_path)
+            entry_offset = cur_offset
+            cur_offset += entry_size
+            entries.append(PakEntry(entry_index, entry_offset, entry_size))
+        pak = Pak(entries)
+        with open(args.output, 'wb') as fh:
+            write_pak(pak, fh)
+            for physical_path in input_files:
+                with open(physical_path, 'rb') as file_fh:
+                    if not args.silent:
+                        print('Adding', physical_path)
+                    content = file_fh.read()
+                    fh.write(content)
+
+    @staticmethod
+    def replace_text_entry(args):
+        with open(args.input, 'rb') as fh:
+            pak = read_pak(fh)
+            for entry in pak.entries:
+                fh.seek(entry.offset)
+                entry.content = fh.read(entry.size)
+
+        entry_index = int(args.index, 16)
+        entry = pak.entries[entry_index]
+        if entry.content[0:2] != BOM:
+            raise RuntimeError('Chosen entry contains binary data! Use extract/create instead.')
+        entry.content = BOM + args.content.encode('utf16')
+        cur_offset = 4 + len(pak.entries) * 4
+        for entry in pak.entries:
+            entry.offset = cur_offset
+            cur_offset += len(entry.content)
+
+        with open(args.input, 'wb') as fh:
+            write_pak(pak, fh)
+            for entry in pak.entries:
+                fh.write(entry.content)
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Danganronpa\'s PAK archive manipulator')
+
+    parser.add_argument('-s', '--silent', action='store_true', help='disables all output')
+
+    subparsers = parser.add_subparsers(help='choose the subcommand')
+    subparsers.required = True
+    subparsers.dest = 'command'
+
+    subparser = subparsers.add_parser('list', help='list files in an archive')
+    subparser.add_argument('input', help='path to the input PAK file', nargs='+')
+    subparser.set_defaults(func=Commands.list_files)
+
+    subparser = subparsers.add_parser('extract', help='extract files from an archive')
+    subparser.add_argument('input', help='path to the input PAK file')
+    subparser.add_argument('output', help='path to the output directory')
+    subparser.set_defaults(func=Commands.extract_files)
+
+    subparser = subparsers.add_parser('create', help='creates a new archive')
+    subparser.add_argument('input', help='path to the input directory', nargs='+')
+    subparser.add_argument('output', help='path to the output PAK file')
+    subparser.set_defaults(func=Commands.pack_files)
+
+    subparser = subparsers.add_parser('replace', help='replace a string entry in an archive')
+    subparser.add_argument('input', help='path to the input PAK file')
+    subparser.add_argument('index', help='index of the entry to replace')
+    subparser.add_argument('content', help='target content of the entry')
+    subparser.set_defaults(func=Commands.replace_text_entry)
+
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    args.func(args)
+
+if __name__ == '__main__':
+    main()

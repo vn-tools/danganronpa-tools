@@ -48,3 +48,23 @@ You can also combine multiple directories into one archive like this:
 
 Incremental patches were not implemented because patching
 `dr1_data_keyboard.wad` this way seems to be fast enough.
+
+### `pak_archiver`
+
+PAK archive packer and unpacker. The usage is similar to WAD archiver with two
+differences:
+
+- since PAK files do not contain information about file names, all entries
+  use hexadecimal numeric names.
+- since PAK files most of the time contain only simple text tables rather than
+  full fledged files, this tool allows on-the-fly patching of such entries like
+  so:
+
+      ./pak_archiver replace input.pak 1A "just an example"
+
+  `1A` is used to refer to the entry number `1A` within the PAK file. Also note
+  that all usual argument expansion rules apply, so strings with spaces need to
+  be put in quotes.
+
+  Should you have troubles with Unicode of any sort, you can always use
+  `extract`/`create` commands instead.
