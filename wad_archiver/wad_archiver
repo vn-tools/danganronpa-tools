@@ -101,7 +101,8 @@ class Commands(object):
                 input_fh.seek(base_offset + file_entry.offset)
                 content = input_fh.read(file_entry.size)
                 output_path = os.path.join(args.output, file_entry.path)
-                print(output_path)
+                if not args.silent:
+                    print(output_path)
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
                 with open(output_path, 'wb') as output_fh:
                     output_fh.write(content)
@@ -130,13 +131,16 @@ class Commands(object):
             write_wad(wad, fh)
             for physical_path, relative_path in input_files:
                 with open(physical_path, 'rb') as file_fh:
-                    print('Adding', relative_path)
+                    if not args.silent:
+                        print('Adding', relative_path)
                     content = file_fh.read()
                     fh.write(content)
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Abstraction\'s WAD archive maniplator')
+
+    parser.add_argument('-s', '--silent', action='store_true', help='disables all output')
 
     subparsers = parser.add_subparsers(help='choose the subcommand')
     subparsers.required = True
