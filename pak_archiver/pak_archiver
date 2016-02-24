@@ -46,8 +46,8 @@ class Commands(object):
             print(fn)
             with open(fn, 'rb') as fh:
                 pak = read_pak(fh)
-                index_pad = math.ceil(math.log(len(pak.entries), 16))
-                size_pad = math.ceil(math.log(max(entry.size for entry in pak.entries), 16))
+                index_pad = math.ceil(math.log(len(pak.entries), 10))
+                size_pad = math.ceil(math.log(max(entry.size for entry in pak.entries), 10))
                 for entry in pak.entries:
                     fh.seek(entry.offset)
                     content_raw = fh.read(entry.size)
@@ -55,7 +55,7 @@ class Commands(object):
                         content_text = content_raw.decode('utf16')
                     else:
                         content_text = '/BINARY CONTENT/'
-                    print('%*X (%0*X) %s' % (index_pad, entry.index, size_pad, entry.size, content_text))
+                    print('%*D (%0*D) %s' % (index_pad, entry.index, size_pad, entry.size, content_text))
 
     @staticmethod
     def extract_files(args):
@@ -64,7 +64,7 @@ class Commands(object):
             for entry in pak.entries:
                 input_fh.seek(entry.offset)
                 content = input_fh.read(entry.size)
-                output_path = os.path.join(args.output, '%04x' % entry.index)
+                output_path = os.path.join(args.output, '%04d' % entry.index)
                 if not args.silent:
                     print('Saved', output_path)
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -81,7 +81,7 @@ class Commands(object):
         cur_offset = 4 + len(input_files) * 4
         entries = []
         for physical_path in input_files:
-            entry_index = int(os.path.basename(physical_path), 16)
+            entry_index = int(os.path.basename(physical_path))
             entry_size = os.path.getsize(physical_path)
             entry_offset = cur_offset
             cur_offset += entry_size
@@ -104,7 +104,7 @@ class Commands(object):
                 fh.seek(entry.offset)
                 entry.content = fh.read(entry.size)
 
-        entry_index = int(args.index, 16)
+        entry_index = int(args.index)
         entry = pak.entries[entry_index]
         if entry.content[0:2] != BOM:
             raise RuntimeError('Chosen entry contains binary data! Use extract/create instead.')
