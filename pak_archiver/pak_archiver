@@ -55,7 +55,7 @@ class Commands(object):
                         content_text = content_raw.decode('utf16')
                     else:
                         content_text = '/BINARY CONTENT/'
-                    print('%*D (%0*D) %s' % (index_pad, entry.index, size_pad, entry.size, content_text))
+                    print('%*u (%0*u) %s' % (index_pad, entry.index, size_pad, entry.size, content_text))
 
     @staticmethod
     def extract_files(args):
