@@ -115,6 +115,8 @@ namespace LIN
             {
                 case ScriptType.Textless:
                     s.FileSize = BitConverter.ToInt32(s.File, 0x8);
+                    if (s.FileSize == 0)
+                        s.FileSize = s.File.Length;
                     s.TextBlockPos = s.FileSize;
                     s.ScriptData = ReadScriptData(s, game);
                     break;
