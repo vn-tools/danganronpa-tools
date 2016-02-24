@@ -159,7 +159,6 @@ namespace LIN
                 s.FileSize = File.Count;
                 for (int i = 0; i < 4; i++) File[0x0C + i] = BitConverter.GetBytes(s.FileSize)[i];
             }
-            while (File.Count % 1024 != 0) File.Add(0x00);
             System.IO.File.WriteAllBytes(Filename, File.ToArray());
             Program.PrintLine("[write] done.");
         }
