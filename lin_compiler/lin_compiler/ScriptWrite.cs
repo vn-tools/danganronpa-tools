@@ -9,7 +9,7 @@ namespace LIN
     {
         static public void WriteSource(Script s, string Filename, Game game = Game.Base)
         {
-            Console.WriteLine("[write] writing decompiled file...");
+            Program.PrintLine("[write] writing decompiled file...");
             System.IO.StreamWriter File = new System.IO.StreamWriter(Filename, false, Encoding.Unicode);
 
             foreach (ScriptEntry e in s.ScriptData)
@@ -44,12 +44,12 @@ namespace LIN
                 File.WriteLine();
             }
             File.Close();
-            Console.WriteLine("[write] done.");
+            Program.PrintLine("[write] done.");
         }
 
         static public void WriteCompiled(Script s, string Filename, Game game = Game.Base)
         {
-            Console.WriteLine("[write] writing compiled file...");
+            Program.PrintLine("[write] writing compiled file...");
             List<byte> File = new List<byte>();
 
             // Header
@@ -161,7 +161,7 @@ namespace LIN
             }
             while (File.Count % 1024 != 0) File.Add(0x00);
             System.IO.File.WriteAllBytes(Filename, File.ToArray());
-            Console.WriteLine("[write] done.");
+            Program.PrintLine("[write] done.");
         }
     }
 }

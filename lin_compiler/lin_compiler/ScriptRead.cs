@@ -10,7 +10,7 @@ namespace LIN
         {
             // Default script type is textless
             s.Type = ScriptType.Textless;
-            Console.WriteLine("[read] reading source file...");
+            Program.PrintLine("[read] reading source file...");
             System.IO.StreamReader File = new System.IO.StreamReader(Filename, Encoding.Unicode);
             List<ScriptEntry> ScriptData = new List<ScriptEntry>();
             StringBuilder sb = new StringBuilder();
@@ -106,9 +106,9 @@ namespace LIN
 
         static public bool ReadCompiled(Script s, byte[] Bytes, Game game = Game.Base)
         {
-            Console.WriteLine("[read] reading compiled file...");
+            Program.PrintLine("[read] reading compiled file...");
             s.File = Bytes;
-            Console.WriteLine("[read] reading header...");
+            Program.PrintLine("[read] reading header...");
             s.Type = (ScriptType)BitConverter.ToInt32(s.File, 0x0);
             s.HeaderSize = BitConverter.ToInt32(s.File, 0x4);
             switch (s.Type)
@@ -136,7 +136,7 @@ namespace LIN
 
         static private List<ScriptEntry> ReadScriptData(Script s, Game game = Game.Base)
         {
-            Console.WriteLine("[read] reading script data...");
+            Program.PrintLine("[read] reading script data...");
             List<ScriptEntry> ScriptData = new List<ScriptEntry>();
             for (int i = s.HeaderSize; i < s.TextBlockPos; i++)
             {
@@ -190,7 +190,7 @@ namespace LIN
 
         static private void ReadTextEntries(Script s)
         {
-            Console.WriteLine("[read] reading text entries...");
+            Program.PrintLine("[read] reading text entries...");
             List<int> TextIDs = new List<int>(s.TextEntries);
             for (int i = 0; i < s.ScriptData.Count; i++)
             {

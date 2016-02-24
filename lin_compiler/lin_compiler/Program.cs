@@ -3,8 +3,15 @@ using System.Collections.Generic;
 
 namespace LIN
 {
-    class Program
+    public class Program
     {
+        private static bool silentMode = false;
+        public static void PrintLine<T>(T line)
+        {
+            if (!silentMode)
+                Console.WriteLine(line);
+        }
+
         static string TrimExtension(string path)
         {
             int len = path.LastIndexOf('.');
@@ -19,6 +26,7 @@ namespace LIN
             Console.WriteLine("-h, --help\t\tdisplay this message");
             Console.WriteLine("-d, --decompile\t\tdecompile the input file (default is compile)");
             Console.WriteLine("-dr2, --danganronpa2\tenable danganronpa 2 mode");
+            Console.WriteLine("-s, --silent\t\tsuppress all non-error messages");
             Console.WriteLine();
             Environment.Exit(0);
         }
@@ -40,6 +48,7 @@ namespace LIN
                     if (a == "-h" || a == "--help")           { DisplayUsage(); }
                     if (a == "-d" || a == "--decompile")      { decompile = true; }
                     if (a == "-dr2" || a == "--danganronpa2") { game = Game.Danganronpa2; }
+                    if (a == "-s" || a == "--silent")         { silentMode = true; }
                 }
                 else
                 {
