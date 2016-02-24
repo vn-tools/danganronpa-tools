@@ -33,15 +33,46 @@ namespace LIN
                 // Get args
                 sb.Clear();
                 while (char.IsWhiteSpace(c)) c = (char)File.Read(); if (File.Peek() == -1) break;
-                while (c != ')' && File.Peek() != -1)
-                {
-                    sb.Append(c);
-                    c = (char)File.Read();
-                }
-
                 if (e.Opcode == 0x02)
                 {
-                    // Text found
+                    while (c != '"' && File.Peek() != -1)
+                        c = (char)File.Read();
+                    if (File.Peek() != -1) c = (char)File.Read();
+                    while (c != '"' && File.Peek() != -1)
+                    {
+                        if (c == '\\')
+                        {
+                            char peek = (char)File.Peek();
+                            switch (peek)
+                            {
+                                case '\\':
+                                    sb.Append('\\');
+                                    c = (char)File.Read();
+                                    break;
+                                case '"':
+                                    sb.Append('"');
+                                    c = (char)File.Read();
+                                    break;
+                                case 'n':
+                                    sb.Append('\n');
+                                    c = (char)File.Read();
+                                    break;
+                                case 'r':
+                                    sb.Append('\r');
+                                    c = (char)File.Read();
+                                    break;
+                                default:
+                                    sb.Append(c);
+                                    break;
+                            }
+                        }
+                        else
+                            sb.Append(c);
+                        c = (char)File.Read();
+                    }
+                    while (c != ')' && File.Peek() != -1)
+                        c = (char)File.Read();
+
                     s.Type = ScriptType.Text;
                     s.TextEntries++;
                     e.Text = sb.ToString();
@@ -49,6 +80,12 @@ namespace LIN
                 }
                 else
                 {
+                    while (c != ')' && File.Peek() != -1)
+                    {
+                        sb.Append(c);
+                        c = (char)File.Read();
+                    }
+
                     List<byte> Args = new List<byte>();
                     if (sb.ToString().Trim().Length > 0)
                     {

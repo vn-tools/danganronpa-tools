@@ -19,7 +19,14 @@ namespace LIN
                 {
                     string Text = e.Text;
                     while (Text.EndsWith("\0")) Text = Text.Remove(Text.Length - 1);
-                    File.Write("(" + Text + ")");
+
+                    // Escapes
+                    Text = Text.Replace("\\", "\\\\");
+                    Text = Text.Replace("\"", "\\\"");
+                    Text = Text.Replace("\r", "\\r");
+                    Text = Text.Replace("\n", "\\n");
+
+                    File.Write("(\"" + Text + "\")");
                 }
                 else
                 {
